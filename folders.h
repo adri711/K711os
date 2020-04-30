@@ -3,22 +3,27 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
-struct folders {
-    std::string name;
-    std::string location;
-}
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include "ui_elements.h"
 
 class folder {
-private:
+protected:
     std::string foldername;
     std::string folderlocation;
 public:
-    folder(std::string, std::string);
+    bool selected;
+
+    SDL_Rect folder_icon;
+    const char* icon_location;
+    
+    folder(std::string, std::string, const char*);
     ~folder();
     void renamefolder(std::string);
+    std::string getname();
+    std::string getlocation();
+    bool isSelected();
 };
-
-std::vector<folders> program_folders;
 
 #endif

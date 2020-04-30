@@ -3,22 +3,26 @@
 
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <math.h>
 #include <vector>
 #include <string>
+#include <chrono>
+#include "folders.h"
 
 struct point {
     int coordinates[2];
-};
-
-struct rectangle {
+}; struct rectangle {
     point d[4];
 };
 
 struct tasks {
     std::string task_name;
-    std::vector<char> task_origin;
+    std::string task_type;
+    std::string task_origin;
     int task_priority;
+    SDL_Rect task_window;
 };
 
 class program {
@@ -27,10 +31,14 @@ private:
     std::vector<tasks> tasks_running;
     SDL_Window *program_window;
     SDL_Renderer *program_renderer;
+    SDL_DisplayMode program_display;
     bool running;
     int cursor_position[2];
     bool cursor_hold;
+    SDL_Rect cursor_rectangle;
     int click_position[2];
+    SDL_Rect task_bar_gfx;
+    bool task_bar_active;
 public:
     program(std::string);
     ~program();
@@ -40,6 +48,7 @@ public:
     void GetCursorPosition(int*, int*);
     void handle_events();
     bool isCursorHeld();
+    bool isTaskBarEnabled();
 };
 
 

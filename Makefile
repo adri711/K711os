@@ -7,4 +7,5 @@ build:
 	-lSDL2main \
 	-lSDL2 \
 	-lSDL2_image \
+	-lSDL2_ttf \
 	-o K711_os
