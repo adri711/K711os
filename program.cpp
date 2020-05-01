@@ -14,15 +14,17 @@ std::vector<folder> program_folders;
 
 /* colors in rgb format */
 #define LIGHT_BLUE 62, 92, 172, 255
-#define LIGHT_RED 150, 12, 12, 125
+#define LIGHT_RED 200, 12, 12, 255
+#define TRANSPARENT_LIGHT_RED 200, 12, 12, 125
 #define TRANSPARENT_GREEN 52, 160, 80, 125
 #define DARK_GREY 30,30,30,255
-#define GREY 15,15,15,255
+#define GREY 120,120,120,255
 #define GREEN 32, 200, 62, 255
 #define WHITE 255,255,255,255
 #define BLACK 0,0,0,255
 #define TRANSPARENT_GREY 52,52,90,80
 #define TRANSPARENT_LIGHT_BLUE 62, 92, 172, 80
+#define ORANGE 255,147,0,150
 
 program::program(std::string programname) {
     this->program_name = programname;
@@ -107,7 +109,7 @@ void program::draw() {
         taskbariconrect.h = TASKBAR_HEIGHT - 2;
         taskbariconrect.x = 2;
         taskbariconrect.y = this->program_display.h - TASKBAR_HEIGHT + 2;
-        SDL_SetRenderDrawColor(program_renderer, GREY);
+        SDL_SetRenderDrawColor(program_renderer, BLACK);
         SDL_RenderFillRect(program_renderer, &task_bar_gfx);
         taskbartexture = IMG_LoadTexture(program_renderer, "assets/icons/taskbaricon.png");
         SDL_RenderCopy(program_renderer, taskbartexture, NULL, &taskbariconrect);
@@ -173,8 +175,54 @@ void program::draw() {
     }
     if(tasks_running.size() != 0) {
         for(std::vector<tasks>::iterator i = tasks_running.begin(); i != tasks_running.end(); i++) {
-            SDL_SetRenderDrawColor(this->program_renderer, WHITE);
-            SDL_RenderFillRect(this->program_renderer, &i->task_window);
+            SDL_SetRenderDrawColor(this->program_renderer, GREY);
+            SDL_RenderFillRect(this->program_renderer, &i->task_window.window_rectangle);
+            i->task_window.upperBar.x = i->task_window.window_rectangle.x;
+            i->task_window.upperBar.y = i->task_window.window_rectangle.y;
+            i->task_window.upperBar.w = i->task_window.window_rectangle.w;
+            i->task_window.upperBar.h = (int)(i->task_window.window_rectangle.h*1/6);
+            i->task_window.lowerBar.x = i->task_window.window_rectangle.x;
+            i->task_window.lowerBar.h = (int)(i->task_window.window_rectangle.h * 1/9);
+            i->task_window.lowerBar.w = i->task_window.window_rectangle.w;
+            i->task_window.lowerBar.y = i->task_window.window_rectangle.y + i->task_window.window_rectangle.h - i->task_window.lowerBar.h;
+            i->task_window.sideBar.x = i->task_window.window_rectangle.x;
+            i->task_window.sideBar.y = i->task_window.window_rectangle.y + i->task_window.upperBar.h;
+            i->task_window.sideBar.w = (int)(i->task_window.window_rectangle.w * 1/6);
+            i->task_window.sideBar.h = i->task_window.lowerBar.y - (i->task_window.window_rectangle.y + i->task_window.upperBar.h);
+            /* Window close button */
+            i->task_window.closeButton.w = 35;
+            i->task_window.closeButton.h = 35; 
+            i->task_window.closeButton.x = i->task_window.upperBar.x + (int)(i->task_window.upperBar.w) - i->task_window.closeButton.w;
+            i->task_window.closeButton.y = i->task_window.upperBar.y + 2;
+
+            SDL_SetRenderDrawColor(this->program_renderer, LIGHT_BLUE);
+            SDL_RenderFillRect(this->program_renderer, &i->task_window.upperBar);
+            SDL_SetRenderDrawColor(this->program_renderer, GREY);
+            SDL_RenderFillRect(this->program_renderer, &i->task_window.lowerBar);
+            SDL_RenderFillRect(this->program_renderer, &i->task_window.sideBar);
+            if(i->task_window.closeButton.x <= x && i->task_window.closeButton.x+i->task_window.closeButton.w >= x) {
+                if(i->task_window.closeButton.y <= y && i->task_window.closeButton.y+i->task_window.closeButton.h >= y) {
+                    SDL_SetRenderDrawColor(this->program_renderer, LIGHT_RED);
+                }
+                else {
+                    SDL_SetRenderDrawColor(this->program_renderer, TRANSPARENT_LIGHT_RED);
+                }
+            }
+            else {
+                SDL_SetRenderDrawColor(this->program_renderer, TRANSPARENT_LIGHT_RED);
+            }
+            SDL_RenderFillRect(this->program_renderer, &i->task_window.closeButton);
+            color = {0,0,0};
+            myFont = TTF_OpenFont("assets/fonts/arial.ttf",12);
+            std::string text = "FODLER: " + i->task_name;
+            SDL_Surface *folder_text_surface = TTF_RenderText_Solid(myFont, text.c_str(), color);
+            SDL_Texture *folder_text_texture = SDL_CreateTextureFromSurface(this->program_renderer, folder_text_surface);
+            SDL_QueryTexture(folder_text_texture, NULL, NULL, &texW, &texH);
+            dstrect = { i->task_window.upperBar.x + 10, i->task_window.upperBar.y + (int)(i->task_window.upperBar.h/2) - 10, texW, texH };
+            SDL_RenderCopy(this->program_renderer, folder_text_texture, NULL, &dstrect);
+            SDL_DestroyTexture(folder_text_surface);
+            SDL_FreeSurface(folder_text_texture);
+            TTF_CloseFont(myFont);
         }
     }
     SDL_Texture *CURSOR_TEXTURE = IMG_LoadTexture(program_renderer, "assets/icons/cursor-icon.png");
@@ -202,13 +250,13 @@ void program::handle_events() {
     SDL_Event e;
     SDL_PumpEvents();
     SDL_PollEvent(&e);
+    SDL_GetMouseState(&this->click_position[0], &this->click_position[1]);
     switch(e.type) {
         case  SDL_QUIT:
             SDL_Quit();
             break;
         case SDL_MOUSEBUTTONDOWN:
             if(!this->cursor_hold) {
-                SDL_GetMouseState(&this->click_position[0], &this->click_position[1]);
                 this->cursor_hold = true;
                 std::cout << "Cursor is being held..." << std::endl;
             }
@@ -221,14 +269,14 @@ void program::handle_events() {
                             } 
                             else {
                                 tasks new_task;
-                                new_task.task_name = "FOLDER_PROCESS:" + i->getname();
+                                new_task.task_name = i->getname();
                                 new_task.task_type = "FOLDER_PROCESS";
                                 new_task.task_origin = i->getlocation();
                                 new_task.task_priority = 1;
-                                new_task.task_window.x = 100;
-                                new_task.task_window.y = 100;
-                                new_task.task_window.h = (int)(this->program_display.h * 3/4);
-                                new_task.task_window.w = (int)(this->program_display.w * 1/2);
+                                new_task.task_window.window_rectangle.x = 100;
+                                new_task.task_window.window_rectangle.y = 100;
+                                new_task.task_window.window_rectangle.h = (int)(this->program_display.h * 3/4);
+                                new_task.task_window.window_rectangle.w = (int)(this->program_display.w * 1/2);
                                 this->tasks_running.push_back(new_task);
                                 i->selected = false;
                             }

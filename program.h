@@ -17,12 +17,20 @@ struct point {
     point d[4];
 };
 
+struct taskwindow {
+    SDL_Rect window_rectangle;
+    SDL_Rect upperBar;
+    SDL_Rect lowerBar;
+    SDL_Rect sideBar;
+    SDL_Rect closeButton;
+};
+
 struct tasks {
     std::string task_name;
     std::string task_type;
     std::string task_origin;
     int task_priority;
-    SDL_Rect task_window;
+    taskwindow task_window;
 };
 
 class program {
