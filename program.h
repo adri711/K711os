@@ -9,11 +9,12 @@
 #include <vector>
 #include <string>
 #include <chrono>
-#include "folders.h"
+#include "file.h"
 
 struct point {
     int coordinates[2];
-}; struct rectangle {
+};
+struct rectangle {
     point d[4];
 };
 
@@ -28,6 +29,7 @@ struct taskwindow {
 struct tasks {
     std::string task_name;
     std::string task_type;
+    std::string task_content;
     std::string task_origin;
     int task_priority;
     taskwindow task_window;
@@ -47,7 +49,10 @@ private:
     int click_position[2];
     SDL_Rect task_bar_gfx;
     bool task_bar_active;
+    taskwindow* draggedwindow;
+
 public:
+    int taskidentificator = 0;
     program(std::string);
     ~program();
     void shutdown();
@@ -59,5 +64,6 @@ public:
     bool isTaskBarEnabled();
 };
 
+void sort_tasks(std::vector<tasks> &task_list);
 
 #endif
